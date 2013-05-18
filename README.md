@@ -39,7 +39,7 @@ func main() {
 
 Now if your toml looks like this:
 
-```
+``` toml
 maxprocs = 8
 addr = "localhost:7755"
 ```
