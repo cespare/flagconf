@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"time"
 
 	"github.com/BurntSushi/toml"
 )
@@ -42,6 +43,10 @@ func joinNS(ns, name string) string {
 }
 
 func registerFlags(s reflect.Value, namespace string) error {
+	if s.Type().AssignableTo(reflect.TypeOf(time.Time{})) {
+
+	}
+
 	kind := s.Kind()
 	fmt.Printf("\033[01;34m>>>> kind: %v\x1B[m\n", kind)
 	var flagFunc reflect.Value
