@@ -11,8 +11,12 @@ file, but allowing for overriding specific settings with flags if I wish.
 
     $ go get -u github.com/cespare/flagconf
 
-Notice that this has a dependency: `github.com/BurntSushi/toml`. I recommend vendoring your libraries to lock
-in the versions in case they change or disappear in the future.
+Note that this has a dependency: `github.com/BurntSushi/toml`. I recommend vendoring your libraries to lock in
+the versions in case they change or disappear in the future.
+
+## TODO
+
+* Top-level must be a struct (because a toml doc must be)
 
 ## Usage
 

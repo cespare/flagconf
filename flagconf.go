@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/BurntSushi/toml"
+	"github.com/cespare/flagconf/toml"
 )
 
 var (

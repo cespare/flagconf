@@ -3,13 +3,13 @@ package main
 import (
 	"fmt"
 	"log"
-	"time"
+	//"time"
 
 	"github.com/cespare/flagconf"
 )
 
 type Config struct {
-	N time.Time `toml:"m" flag:"n"`
+	//N time.Time `toml:"m" flag:"n"`
 	Foo struct { Bar string `flag:"bar"` } `flag:"foo"`
 }
 
