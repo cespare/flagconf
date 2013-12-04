@@ -6,16 +6,17 @@ import (
 	"os"
 	"reflect"
 	"testing"
+	"time"
 )
 
 type testCase struct {
-	config   interface{} // the (struct) initial configuration passed to Parse
+	config   interface{} // the (struct) initial configuration passed to ParseStrings
 	toml     string      // text of TOML file
-	args     []string      // user command-line arguments
+	args     []string    // user command-line arguments
 	expected interface{} // the expected state of the configuration after application of toml and flag parsing
 }
 
-func checkCase(test *testCase) (err error) {
+func checkCase(test *testCase) error {
 	tempfile, err := ioutil.TempFile("", "flagconf-test")
 	if err != nil {
 		return err
@@ -24,28 +25,14 @@ func checkCase(test *testCase) (err error) {
 		return err
 	}
 	name := tempfile.Name()
-	defer func() {
-		fmt.Println("first")
-		fmt.Println(name)
-		err = os.Remove(name)
-	}()
+	defer func() { os.Remove(name) }()
+
 	if err := tempfile.Close(); err != nil {
 		return err
 	}
 
-	oldArgs := make([]string, len(os.Args))
-	copy(oldArgs, os.Args)
-	newArgs := make([]string, len(test.args) + 1)
-	newArgs[0] = oldArgs[0]
-	copy(newArgs[1:], test.args)
-	os.Args = newArgs
-	defer func() {
-		fmt.Println("Second")
-		copy(os.Args, oldArgs)
-	}()
-
-	fmt.Printf("\033[01;34m>>>> os.Args: %v\x1B[m\n", os.Args)
-	err = Parse(name, test.config)
+	args := append([]string{"test"}, test.args...)
+	err = ParseStrings(args, name, test.config, false)
 	if err != nil {
 		return fmt.Errorf("parsing failed when it was expected to succeed: %s", err)
 	}
@@ -55,16 +42,92 @@ func checkCase(test *testCase) (err error) {
 	return nil
 }
 
-type simple1 struct {
-	F1 int `toml:"f1"`
+type simpleCase struct {
+	F1 int
+}
+
+type flagTagCase struct {
+	F1 int `flag:"f2"`
+}
+
+type embeddedCase struct {
+	S1 *simpleCase
+}
+
+type timeCase struct {
+	T1 time.Time
+}
+
+type nonPointerEmbeddedCase struct {
+	S1 simpleCase
 }
 
 var testCases = []*testCase{
 	{
-		config: &simple1{},
-		toml: "f1 = 3",
-		args: []string{"-f1=4"},
-		expected: &simple1{F1: 4},
+		config:   &simpleCase{5},
+		toml:     "",
+		args:     nil,
+		expected: &simpleCase{F1: 5},
+	},
+	{
+		config:   &simpleCase{},
+		toml:     "f1 = 3",
+		args:     []string{"-f1=4"},
+		expected: &simpleCase{F1: 4},
+	},
+	{
+		config:   &simpleCase{},
+		toml:     "f1 = 3",
+		args:     nil,
+		expected: &simpleCase{F1: 3},
+	},
+	{
+		config:   &flagTagCase{},
+		toml:     "f1 = 3",
+		args:     []string{"-f2=4"},
+		expected: &flagTagCase{F1: 4},
+	},
+	{
+		config: &embeddedCase{},
+		toml: `[s1]
+f1 = 3`,
+		args:     nil,
+		expected: &embeddedCase{&simpleCase{F1: 3}},
+	},
+	{
+		config: &embeddedCase{&simpleCase{}},
+		toml: `[s1]
+f1 = 3`,
+		args:     nil,
+		expected: &embeddedCase{&simpleCase{F1: 3}},
+	},
+	{
+		config: &embeddedCase{&simpleCase{}},
+		toml: `[s1]
+f1 = 3`,
+		args:     []string{"-s1.f1=4"},
+		expected: &embeddedCase{&simpleCase{F1: 4}},
+	},
+	{
+		config: &nonPointerEmbeddedCase{},
+		toml: `[s1]
+f1 = 3`,
+		args:     nil,
+		expected: &nonPointerEmbeddedCase{simpleCase{F1: 3}},
+	},
+	{
+		config: &nonPointerEmbeddedCase{simpleCase{}},
+		toml: `[s1]
+f1 = 3`,
+		args:     nil,
+		expected: &nonPointerEmbeddedCase{simpleCase{F1: 3}},
+	},
+	{
+		config: &nonPointerEmbeddedCase{simpleCase{}},
+		toml: `[s1]
+f1 = 3`,
+		args:     []string{"-s1.f1=4"},
+		expected: &nonPointerEmbeddedCase{simpleCase{F1: 4}},
 	},
 }
 

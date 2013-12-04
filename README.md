@@ -1,26 +1,18 @@
 # flagconf
 
-This is a Go library that unifies the standard library's [flag package](http://golang.org/pkg/flag) with
-@BurntSushi's excellent [TOML parsing library](https://github.com/BurntSushi/toml). It reduces boilerplate for
-a common use case for me: configuring my program (usually a server of some kind) using a TOML configuration
-file, but allowing for overriding specific settings with flags if I wish.
+Package flagconf combine's the standard library's [flag package](http://golang.org/pkg/flag) with Andrew
+Gallant's excellent [TOML parsing library](https://github.com/BurntSushi/toml).
 
-**Note:** This is a non-functional WIP but it should be ready for consumption soon.
+This package sets program options from a TOML configuration file while allowing the settings to be overridden
+with command-line flags as well.
 
 ## Installation
 
     $ go get -u github.com/cespare/flagconf
 
-Note that this has a dependency: `github.com/BurntSushi/toml`. I recommend vendoring your libraries to lock in
-the versions in case they change or disappear in the future.
-
-## TODO
-
-* Top-level must be a struct (because a toml doc must be)
-
 ## Usage
 
-Doesn't quite work yet, but this is an example of how it will look:
+Here is a small example:
 
 ``` go
 import (
@@ -28,8 +20,8 @@ import (
 )
 
 type Config struct {
-  MaxProcs int    `flag:"maxprocs"`
-  Addr     string `flag:"addr"`
+  MaxProcs int    `desc:"maximum OS threads"`
+  Addr     string `desc:"listen address (with port)"`
 }
 
 func main() {
@@ -56,6 +48,11 @@ then `conf` will be:
 
     MaxProcs: 8
     Addr: ":8888"
+
+(That is, TOML settings override the defaults and flags given override those.)
+
+Full documentation may be found [on godoc.org](http://godoc.org/github.com/cespare/flagconf) or by using any
+of the usual documentation viewing methods for this package.
 
 ## License
 
