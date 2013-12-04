@@ -66,31 +66,31 @@ Example
 
 Here is a small example:
 
-		import (
-		  "github.com/cespare/flagconf"
-		)
+    import (
+      "github.com/cespare/flagconf"
+    )
 
-		type Config struct {
-		  MaxProcs int    `desc:"maximum OS threads"`
-		  Addr     string `desc:"listen address (with port)"`
-		}
+    type Config struct {
+      MaxProcs int    `desc:"maximum OS threads"`
+      Addr     string `desc:"listen address (with port)"`
+    }
 
-		func main() {
-		  // Set the defaults
-		  config := Config{
-		    MaxProcs: 4,
-		  }
-		  flagconf.Parse("config.toml", &config)
-		}
+    func main() {
+      // Set the defaults
+      config := Config{
+        MaxProcs: 4,
+      }
+      flagconf.Parse("config.toml", &config)
+    }
 
 Now if your toml looks like this:
 
-		maxprocs = 8
-		addr = "localhost:7755"
+    maxprocs = 8
+    addr = "localhost:7755"
 
 and you run your program with
 
-    $ ./prog -addr ":8888"
+    ./prog -addr ":8888"
 
 then conf will be:
 
@@ -110,31 +110,31 @@ Parse returns an error if no file can be found at path.
 Types
 
 For simplicity, flagconf supports a fairly limited set of types: the intersection of types supported by TOML
-and the types supported by `flag`. The basic types are therefore:
+and the types supported by the flag package. The basic types are therefore:
 
-		bool
-		string
-		int
-		int64
-		uint
-		uint64
-		float64
+    bool
+    string
+    int
+    int64
+    uint
+    uint64
+    float64
 
 The only exception is that flagconf has special handling for structs. Flagconf recursively inspects structs
 and and creates them as necessary when your config contains a nil struct pointer. In TOML, a struct
 corresponds to a nested section; in flags a struct will be dot-separated:
 
-		type Conf {
-			S *struct {
-				N int
-			}
-		}
+    type Conf {
+      S *struct {
+        N int
+      }
+    }
 
-		// corresponds to this TOML
-		[s]
-		n = 3
+    // corresponds to this TOML
+    [s]
+    n = 3
 
-		// and this flag
+    // and this flag
     -s.n=3
 
 Naming
@@ -147,9 +147,9 @@ wish.
 The flag names are constructed by lowercasing the struct field name. You can use the "flag" struct tag to set
 that name if you wish, as well.
 
-		type Conf struct {
-			Foo string `toml:"bar" flag:"baz"`
-		}
+    type Conf struct {
+      Foo string `toml:"bar" flag:"baz"`
+    }
 */
 func Parse(path string, config interface{}) error {
 	return ParseStrings(os.Args, path, config, false)
