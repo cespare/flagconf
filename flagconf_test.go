@@ -6,6 +6,7 @@ import (
 	"os"
 	"reflect"
 	"testing"
+	"time"
 )
 
 type testCase struct {
@@ -55,6 +56,11 @@ type embeddedCase struct {
 
 type nonPointerEmbeddedCase struct {
 	S1 simpleCase
+}
+
+type ignoreCase struct {
+	F int
+	D time.Duration `flag:"-"`
 }
 
 var testCases = []*testCase{
@@ -123,6 +129,12 @@ f1 = 3`,
 f1 = 3`,
 		args:     []string{"-s1.f1=4"},
 		expected: &nonPointerEmbeddedCase{simpleCase{F1: 4}},
+	},
+	{
+		config:   &ignoreCase{},
+		toml:     "f = 3",
+		args:     nil,
+		expected: &ignoreCase{F: 3},
 	},
 }
 

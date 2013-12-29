@@ -103,7 +103,8 @@ Descriptions for the flags are taken from the "desc" struct tag. A default descr
 field type if a tag is not provided.
 
 TOML matches are attempted for every exported field in the configuration struct. Flag names are constructed
-for every exported field. (Unexported fields are ignored by flagconf.)
+for every exported field. Unexported fields, as well as exported fields tagged with `flag:"-"`, are ignored by
+flagconf.
 
 Parse returns an error if no file can be found at path.
 
@@ -172,6 +173,9 @@ func registerFlags(flagset *flag.FlagSet, v reflect.Value, namespace, descriptio
 			typ := v.Type().Field(i)
 			name := strings.ToLower(typ.Name)
 			if tag := typ.Tag.Get("flag"); tag != "" {
+				if tag == "-" {
+					continue
+				}
 				name = tag
 			}
 			desc := typ.Tag.Get("desc")
