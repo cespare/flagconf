@@ -6,7 +6,6 @@ import (
 	"os"
 	"reflect"
 	"testing"
-	"time"
 )
 
 type testCase struct {
@@ -52,10 +51,6 @@ type flagTagCase struct {
 
 type embeddedCase struct {
 	S1 *simpleCase
-}
-
-type timeCase struct {
-	T1 time.Time
 }
 
 type nonPointerEmbeddedCase struct {
