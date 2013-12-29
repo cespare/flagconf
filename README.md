@@ -1,6 +1,6 @@
 # flagconf
 
-Package flagconf combine's the standard library's [flag package](http://golang.org/pkg/flag) with Andrew
+Package flagconf combines the standard library's [flag package](http://golang.org/pkg/flag) with Andrew
 Gallant's excellent [TOML parsing library](https://github.com/BurntSushi/toml).
 
 This package sets program options from a TOML configuration file while allowing the settings to be overridden
