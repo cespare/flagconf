@@ -104,7 +104,8 @@ field type if a tag is not provided.
 
 TOML matches are attempted for every exported field in the configuration struct. Flag names are constructed
 for every exported field. Unexported fields, as well as exported fields tagged with `flag:"-"`, are ignored by
-flagconf.
+flagconf. (If you ignore a field by tagging it `flag:"-"`, you probably also want to tag it with `toml:"-"` so
+that the field is not picked up by the TOML parser.)
 
 Parse returns an error if no file can be found at path.
 
