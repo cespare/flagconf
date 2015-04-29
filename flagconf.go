@@ -12,7 +12,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/cespare/flagconf/toml"
+	"github.com/BurntSushi/toml"
 )
 
 // ParseStrings reads a TOML configuration file at path as well as command-line arguments in args and sets
