@@ -63,6 +63,11 @@ type ignoreCase struct {
 	D time.Duration `flag:"-"`
 }
 
+type sliceCase struct {
+	S Strings
+	F Ints
+}
+
 var testCases = []*testCase{
 	{
 		config:   &simpleCase{5},
@@ -135,6 +140,25 @@ f1 = 3`,
 		toml:     "f = 3",
 		args:     nil,
 		expected: &ignoreCase{F: 3},
+	},
+	{
+		config: &sliceCase{},
+		toml: `s = ["a", "b"]
+f = [1, 2]`,
+		args:     nil,
+		expected: &sliceCase{S: Strings{"a", "b"}, F: Ints{1, 2}},
+	},
+	{
+		config:   &sliceCase{},
+		toml:     "",
+		args:     []string{"-s=a,b", "-f=1,2"},
+		expected: &sliceCase{S: Strings{"a", "b"}, F: Ints{1, 2}},
+	},
+	{
+		config:   &sliceCase{},
+		toml:     `s = ["a", "b"]`,
+		args:     []string{"-f=1,2"},
+		expected: &sliceCase{S: Strings{"a", "b"}, F: Ints{1, 2}},
 	},
 }
 

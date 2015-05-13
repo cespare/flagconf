@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/BurntSushi/toml"
@@ -122,6 +123,8 @@ and the types supported by the flag package. The basic types are therefore:
     uint64
     float64
 
+For convenience, flagconf also supports any type implementing flag.Value, as long as TOML also supports it.
+
 The only exception is that flagconf has special handling for structs. Flagconf recursively inspects structs
 and and creates them as necessary when your config contains a nil struct pointer. In TOML, a struct
 corresponds to a nested section; in flags a struct will be dot-separated:
@@ -196,6 +199,12 @@ func registerFlags(flagset *flag.FlagSet, v reflect.Value, namespace, descriptio
 		return nil
 	}
 
+	name := reflect.ValueOf(namespace)
+	usage := reflect.ValueOf(description)
+	if description == "" {
+		usage = reflect.ValueOf(fmt.Sprintf("(%s flag, no description given)", v.Type()))
+	}
+
 	var flagFunc reflect.Value
 
 	switch v.Type() {
@@ -214,16 +223,64 @@ func registerFlags(flagset *flag.FlagSet, v reflect.Value, namespace, descriptio
 	case reflect.TypeOf(uint64(0)):
 		flagFunc = reflect.ValueOf(flagset.Uint64Var)
 	default:
+		// reflect.Type of flag.Value
+		fvt := reflect.TypeOf((*flag.Value)(nil)).Elem()
+		if v.Type().Implements(fvt) {
+			flagset.Var(v.Interface().(flag.Value), namespace, usage.String())
+			return nil
+		}
+		// If value is addressable, its pointer may implement flag.Value
+		if v.CanAddr() && v.Addr().Type().Implements(fvt) {
+			flagset.Var(v.Addr().Interface().(flag.Value), namespace, usage.String())
+			return nil
+		}
+
 		return fmt.Errorf("flagconf: unhandled type: %s", v.Type())
 	}
 
 	p := v.Addr()
-	name := reflect.ValueOf(namespace)
-	usage := reflect.ValueOf(description)
-	if description == "" {
-		usage = reflect.ValueOf(fmt.Sprintf("(%s flag, no description given)", v.Type()))
-	}
 	args := []reflect.Value{p, name, v, usage}
 	flagFunc.Call(args)
+	return nil
+}
+
+// Strings is a convenience wrapper around a string slice that implements
+// flag.Value and handles the value as comma-separated list.
+//
+// For example flag -peers=127.0.0.1,127.0.0.2 will result in a slice
+// {"127.0.0.1", "127.0.0.2"}
+type Strings []string
+
+func (ss Strings) String() string {
+	return strings.Join(ss, ",")
+}
+
+func (ss *Strings) Set(s string) error {
+	*ss = Strings(strings.Split(s, ","))
+	return nil
+}
+
+// Ints is a convenience wrapper around an int slice that implements flag.Value
+// and handles the value as comma-separated list.
+//
+// For example flag -cpu=1,2,4 will result in a slice {1, 2, 4}
+type Ints []int
+
+func (is Ints) String() string {
+	ss := make([]string, 0, len(is))
+	for _, i := range is {
+		ss = append(ss, strconv.Itoa(i))
+	}
+	return strings.Join(ss, ",")
+}
+
+func (is *Ints) Set(ss string) error {
+	for _, s := range strings.Split(ss, ",") {
+		i, err := strconv.Atoi(s)
+		if err != nil {
+			return err
+		}
+		*is = append(*is, i)
+	}
 	return nil
 }
