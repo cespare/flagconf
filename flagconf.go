@@ -1,8 +1,9 @@
-// Package flagconf combine's the standard library's flag package with Andrew Gallant's excellent TOML parsing
-// library: https://github.com/BurntSushi/toml.
+// Package flagconf combines the standard library's flag package
+// with Andrew Gallant's excellent TOML parsing library:
+// https://github.com/BurntSushi/toml.
 //
-// This package sets program options from a TOML configuration file while allowing the settings to be
-// overridden with command-line flags as well.
+// This package sets program options from a TOML configuration file
+// while allowing the settings to be overridden with command-line flags as well.
 package flagconf
 
 import (
@@ -16,15 +17,19 @@ import (
 	"github.com/BurntSushi/toml"
 )
 
-// ParseStrings reads a TOML configuration file at path as well as command-line arguments in args and sets
-// matching options in config, which must be a non-nil pointer to a struct.
+// ParseStrings reads a TOML configuration file at path as well as
+// command-line arguments in args  and sets matching options in config,
+// which must be a non-nil pointer to a struct.
 //
-// ParseStrings is similar to Parse except that it provides the caller with more fine-grained control.
+// ParseStrings is similar to Parse except that it provides the caller
+// with more fine-grained control.
 //
-// The argument array is passed into ParseStrings the args parameter; note that this is treated like os.Args
-// in that args[0] is interpreted as the executable name and args[1:] are flags.
+// The argument array is passed into ParseStrings the args parameter;
+// note that this is treated like os.Args in that args[0] is interpreted
+// as the executable name and args[1:] are flags.
 //
-// The allowNoConfig parameter controls whether ParseStrings returns an error if no file is found at path.
+// The allowNoConfig parameter controls whether ParseStrings returns an error
+// if no file is found at path.
 func ParseStrings(args []string, path string, config interface{}, allowNoConfigFile bool) error {
 	if len(args) < 1 {
 		return fmt.Errorf("flagconf: ParseStrings called with empty args")
@@ -53,15 +58,15 @@ func ParseStrings(args []string, path string, config interface{}, allowNoConfigF
 }
 
 /*
-Parse reads a TOML configuration file at path as well as user-supplied options from os.Args and sets matching
-options in config, which must be a non-nil pointer to a struct.
+Parse reads a TOML configuration file at path as well as user-supplied options
+from os.Args and sets matching options in config, which must be a non-nil pointer to a struct.
 
-The idea is that you will put your configuration settings into a struct and populate an instance of that
-struct with the default values.
+Typical usage is that the user represents configuration options with a struct type
+and then populates a value of that type with the default configuration values.
 
-Then you will call flagconf.Parse, passing in the path to the configuration file and a pointer to your
-configuration. This function will read settings in from the TOML file and then read the user-supplied
-arguments from os.Args.
+Then the user calls flagconf.Parse, passing in the path to the configuration file
+and a pointer to the configuration value. This function will read settings
+from the TOML file and then read the user-supplied arguments from os.Args.
 
 Example
 
@@ -84,12 +89,12 @@ Here is a small example:
       flagconf.Parse("config.toml", &config)
     }
 
-Now if your toml looks like this:
+Now if the TOML looks like this:
 
     maxprocs = 8
     addr = "localhost:7755"
 
-and you run your program with
+and the user runs the program with
 
     ./prog -addr ":8888"
 
@@ -100,20 +105,21 @@ then conf will be:
 
 (That is, TOML settings override the defaults and flags given override those.)
 
-Descriptions for the flags are taken from the "desc" struct tag. A default description is created based on the
-field type if a tag is not provided.
+Descriptions for the flags are taken from the "desc" struct tag.
+A default description is created based on the field type if a tag is not provided.
 
-TOML matches are attempted for every exported field in the configuration struct. Flag names are constructed
-for every exported field. Unexported fields, as well as exported fields tagged with `flag:"-"`, are ignored by
-flagconf. (If you ignore a field by tagging it `flag:"-"`, you probably also want to tag it with `toml:"-"` so
-that the field is not picked up by the TOML parser.)
+TOML matches are attempted for every exported field in the configuration struct.
+Flag names are constructed for every exported field. Unexported fields,
+as well as exported fields tagged with `flag:"-"`, are ignored by flagconf.
+(If a field is ignored by using this tag, it is typically best to also use
+`toml:"-"` so that the field is not picked up by the TOML parser.)
 
 Parse returns an error if no file can be found at path.
 
 Types
 
-For simplicity, flagconf supports a fairly limited set of types: the intersection of types supported by TOML
-and the types supported by the flag package. The basic types are therefore:
+The basic types flagconf supports are those which are directly supported by both
+package flag and TOML:
 
     bool
     string
@@ -123,11 +129,11 @@ and the types supported by the flag package. The basic types are therefore:
     uint64
     float64
 
-For convenience, flagconf also supports any type implementing flag.Value, as long as TOML also supports it.
+Flagconf also supports any type implementing flag.Value, as long as TOML also supports it.
 
-The only exception is that flagconf has special handling for structs. Flagconf recursively inspects structs
-and and creates them as necessary when your config contains a nil struct pointer. In TOML, a struct
-corresponds to a nested section; in flags a struct will be dot-separated:
+Finally, flagconf supports nesting by recursively inspecting structs
+and creating them as necessary when the config value contains a nil struct pointer.
+In TOML, a struct corresponds to a nested section; in flags the name will be dot-separated:
 
     type Conf {
       S *struct {
@@ -144,13 +150,13 @@ corresponds to a nested section; in flags a struct will be dot-separated:
 
 Naming
 
-Matching names from TOML values to struct field names is much like encoding/json: exact matches are preferred
-and then case-insensitive matching will be accepted. (Typically you'll use all lowercase for your TOML names,
-but the struct fields must be exported.) You can use the struct tag "toml" to set a different name if you
-wish.
+Matching names from TOML values to struct field names is much like encoding/json:
+exact matches are preferred and then case-insensitive matching will be accepted.
+(TOML names are typically lowercase, but the struct fields must be exported.)
+The struct tag "toml" can be used to set a different name.
 
-The flag names are constructed by lowercasing the struct field name. You can use the "flag" struct tag to set
-that name if you wish, as well.
+The flag names are constructed by lowercasing the struct field name.
+The "flag" struct tag controls the flag name.
 
     type Conf struct {
       Foo string `toml:"bar" flag:"baz"`
@@ -248,7 +254,7 @@ func registerFlags(flagset *flag.FlagSet, v reflect.Value, namespace, descriptio
 // flag.Value and handles the value as comma-separated list.
 //
 // For example flag -peers=127.0.0.1,127.0.0.2 will result in a slice
-// {"127.0.0.1", "127.0.0.2"}
+// {"127.0.0.1", "127.0.0.2"}.
 type Strings []string
 
 func (ss Strings) String() string {
@@ -263,7 +269,7 @@ func (ss *Strings) Set(s string) error {
 // Ints is a convenience wrapper around an int slice that implements flag.Value
 // and handles the value as comma-separated list.
 //
-// For example flag -cpu=1,2,4 will result in a slice {1, 2, 4}
+// For example flag -cpu=1,2,4 will result in a slice {1, 2, 4}.
 type Ints []int
 
 func (is Ints) String() string {
