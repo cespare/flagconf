@@ -18,7 +18,7 @@ import (
 )
 
 // ParseStrings reads a TOML configuration file at path as well as
-// command-line arguments in args  and sets matching options in config,
+// command-line arguments in args and sets matching options in config,
 // which must be a non-nil pointer to a struct.
 //
 // ParseStrings is similar to Parse except that it provides the caller
