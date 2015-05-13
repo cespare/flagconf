@@ -89,10 +89,11 @@ Here is a small example:
       flagconf.Parse("config.toml", &config)
     }
 
-Now if the TOML looks like this:
+Now if the TOML file looks like this:
 
+		# config.toml
     maxprocs = 8
-    addr = "localhost:7755"
+    addr     = "localhost:7755"
 
 and the user runs the program with
 
@@ -101,7 +102,7 @@ and the user runs the program with
 then conf will be:
 
     MaxProcs: 8
-    Addr: ":8888"
+    Addr:     ":8888"
 
 (That is, TOML settings override the defaults and flags given override those.)
 

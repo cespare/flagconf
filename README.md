@@ -1,5 +1,7 @@
 # flagconf
 
+[![GoDoc](https://godoc.org/github.com/cespare/flagconf?status.svg)](https://godoc.org/github.com/cespare/flagconf)
+
 Package flagconf combines the standard library's [flag package](http://golang.org/pkg/flag) with Andrew
 Gallant's excellent [TOML parsing library](https://github.com/BurntSushi/toml).
 
@@ -11,6 +13,8 @@ with command-line flags as well.
     $ go get -u github.com/cespare/flagconf
 
 ## Usage
+
+Documentation is on [godoc.org](http://godoc.org/github.com/cespare/flagconf).
 
 Here is a small example:
 
@@ -25,7 +29,7 @@ type Config struct {
 }
 
 func main() {
-  // Set the defaults
+  // Set the defaults.
   config := Config{
     MaxProcs: 4,
   }
@@ -33,26 +37,24 @@ func main() {
 }
 ```
 
-Now if your toml looks like this:
+Now if the TOML file looks like this:
 
 ``` toml
+# config.toml
 maxprocs = 8
-addr = "localhost:7755"
+addr     = "localhost:7755"
 ```
 
-and you run your program with
+and the program is run like this:
 
     $ ./prog -addr ":8888"
 
 then `conf` will be:
 
     MaxProcs: 8
-    Addr: ":8888"
+    Addr:     ":8888"
 
 (That is, TOML settings override the defaults and flags given override those.)
-
-Full documentation may be found [on godoc.org](http://godoc.org/github.com/cespare/flagconf) or by using any
-of the usual documentation viewing methods for this package.
 
 ## License
 
