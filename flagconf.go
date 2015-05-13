@@ -41,6 +41,7 @@ func ParseStrings(args []string, path string, config interface{}, allowNoConfigF
 	}
 
 	flagset := flag.NewFlagSet(args[0], flag.ContinueOnError)
+	flagset.Usage = func() {}
 	// Create flags
 	if err := registerFlags(flagset, reflect.Indirect(v), "", ""); err != nil {
 		return err
@@ -189,9 +190,10 @@ func Parse(path string, config interface{}) error {
 // exits the program.
 func MustParse(path string, config interface{}) {
 	if err := ParseStrings(os.Args, path, config, false); err != nil {
-		fmt.Fprintln(os.Stderr, err)
 		if ferr, ok := err.(FlagError); ok {
 			fmt.Fprintln(os.Stderr, ferr.Usage)
+		} else {
+			fmt.Fprintln(os.Stderr, err)
 		}
 		os.Exit(2)
 	}
