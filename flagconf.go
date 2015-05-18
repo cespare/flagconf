@@ -41,7 +41,6 @@ func ParseStrings(args []string, path string, config interface{}, allowNoConfigF
 	}
 
 	flagset := flag.NewFlagSet(args[0], flag.ContinueOnError)
-	flagset.Usage = func() {}
 	// Create flags
 	if err := registerFlags(flagset, reflect.Indirect(v), "", ""); err != nil {
 		return err
@@ -55,12 +54,16 @@ func ParseStrings(args []string, path string, config interface{}, allowNoConfigF
 		}
 	}
 
+	// Prevent flagset.Parse from printing error and usage to stderr if parsing
+	// fails
+	flagset.Usage = func() {}
+	buf := &bytes.Buffer{}
+	flagset.SetOutput(buf)
+
 	// Override any settings with configured flags
 	if err = flagset.Parse(args[1:]); err != nil {
 		// In case flag parsing fails, return a custom error containing usage
 		// info if user wants to print it.
-		buf := &bytes.Buffer{}
-		flagset.SetOutput(buf)
 		flagset.PrintDefaults()
 		err = FlagError{Err: err, Usage: buf.String()}
 	}
