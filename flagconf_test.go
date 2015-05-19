@@ -1,6 +1,8 @@
 package flagconf
 
 import (
+	"errors"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -197,5 +199,17 @@ func TestGoodConfigs(t *testing.T) {
 			t.Log(test)
 			t.Error(err)
 		}
+	}
+}
+
+func TestIsHelp(t *testing.T) {
+	if !IsHelp(flag.ErrHelp) {
+		t.Fatal("IsHelp(flag.ErrHelp) != true")
+	}
+	if !IsHelp(FlagError{Err: flag.ErrHelp}) {
+		t.Fatal("IsHelp(FlagError{Err: flag.ErrHelp}) != true")
+	}
+	if IsHelp(errors.New("not help")) {
+		t.Fatal("IsHelp(not help) == true")
 	}
 }

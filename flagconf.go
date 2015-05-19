@@ -81,6 +81,15 @@ func (e FlagError) Error() string {
 	return e.Err.Error()
 }
 
+// IsHelp checks whether err was caused by user requesting help output
+// (setting -h or --help flags).
+func IsHelp(err error) bool {
+	if err, ok := err.(FlagError); ok {
+		return err.Err == flag.ErrHelp
+	}
+	return err == flag.ErrHelp
+}
+
 /*
 Parse reads a TOML configuration file at path as well as user-supplied options
 from os.Args and sets matching options in config, which must be a non-nil pointer to a struct.
