@@ -64,8 +64,9 @@ func ParseStrings(args []string, path string, config interface{}, allowNoConfigF
 	if err = flagset.Parse(args[1:]); err != nil {
 		// In case flag parsing fails, return a custom error containing usage
 		// info if user wants to print it.
+		fmt.Fprintf(buf, "Usage of %s:\n", args[0])
 		flagset.PrintDefaults()
-		err = FlagError{Err: err, Usage: buf.String()}
+		err = FlagError{Err: err, Usage: strings.TrimSpace(buf.String())}
 	}
 	return err
 }
