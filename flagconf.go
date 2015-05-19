@@ -7,6 +7,7 @@
 package flagconf
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"os"
@@ -39,7 +40,7 @@ func ParseStrings(args []string, path string, config interface{}, allowNoConfigF
 		return fmt.Errorf("flagconf: config must be a pointer to a struct")
 	}
 
-	flagset := flag.NewFlagSet(args[0], flag.ExitOnError)
+	flagset := flag.NewFlagSet(args[0], flag.ContinueOnError)
 	// Create flags
 	if err := registerFlags(flagset, reflect.Indirect(v), "", ""); err != nil {
 		return err
@@ -53,8 +54,40 @@ func ParseStrings(args []string, path string, config interface{}, allowNoConfigF
 		}
 	}
 
+	// Prevent flagset.Parse from printing error and usage to stderr if parsing
+	// fails
+	flagset.Usage = func() {}
+	buf := &bytes.Buffer{}
+	flagset.SetOutput(buf)
+
 	// Override any settings with configured flags
-	return flagset.Parse(args[1:])
+	if err = flagset.Parse(args[1:]); err != nil {
+		// In case flag parsing fails, return a custom error containing usage
+		// info if user wants to print it.
+		fmt.Fprintf(buf, "Usage of %s:\n", args[0])
+		flagset.PrintDefaults()
+		err = FlagError{Err: err, Usage: strings.TrimSpace(buf.String())}
+	}
+	return err
+}
+
+// FlagError combines error received from flag parsing with default usage info.
+type FlagError struct {
+	Err   error
+	Usage string
+}
+
+func (e FlagError) Error() string {
+	return e.Err.Error()
+}
+
+// IsHelp checks whether err was caused by user requesting help output
+// (setting -h or --help flags).
+func IsHelp(err error) bool {
+	if err, ok := err.(FlagError); ok {
+		return err.Err == flag.ErrHelp
+	}
+	return err == flag.ErrHelp
 }
 
 /*
@@ -165,6 +198,19 @@ The "flag" struct tag controls the flag name.
 */
 func Parse(path string, config interface{}) error {
 	return ParseStrings(os.Args, path, config, false)
+}
+
+// MustParse is like Parse except if parsing fails it prints the error and
+// exits the program.
+func MustParse(path string, config interface{}) {
+	if err := ParseStrings(os.Args, path, config, false); err != nil {
+		if ferr, ok := err.(FlagError); ok {
+			fmt.Fprintln(os.Stderr, ferr.Usage)
+		} else {
+			fmt.Fprintln(os.Stderr, err)
+		}
+		os.Exit(2)
+	}
 }
 
 func joinNS(ns, name string) string {

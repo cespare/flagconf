@@ -1,6 +1,8 @@
 package flagconf
 
 import (
+	"errors"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -10,10 +12,11 @@ import (
 )
 
 type testCase struct {
-	config   interface{} // the (struct) initial configuration passed to ParseStrings
-	toml     string      // text of TOML file
-	args     []string    // user command-line arguments
-	expected interface{} // the expected state of the configuration after application of toml and flag parsing
+	config    interface{} // the (struct) initial configuration passed to ParseStrings
+	toml      string      // text of TOML file
+	args      []string    // user command-line arguments
+	expected  interface{} // the expected state of the configuration after application of toml and flag parsing
+	expectErr bool
 }
 
 func checkCase(test *testCase) error {
@@ -21,11 +24,11 @@ func checkCase(test *testCase) error {
 	if err != nil {
 		return err
 	}
+	name := tempfile.Name()
+	defer os.Remove(name)
 	if _, err := tempfile.WriteString(test.toml); err != nil {
 		return err
 	}
-	name := tempfile.Name()
-	defer func() { os.Remove(name) }()
 
 	if err := tempfile.Close(); err != nil {
 		return err
@@ -33,6 +36,12 @@ func checkCase(test *testCase) error {
 
 	args := append([]string{"test"}, test.args...)
 	err = ParseStrings(args, name, test.config, false)
+	if test.expectErr {
+		if err == nil {
+			return fmt.Errorf("parsing succeeded when it was expected to fail")
+		}
+		return nil
+	}
 	if err != nil {
 		return fmt.Errorf("parsing failed when it was expected to succeed: %s", err)
 	}
@@ -160,12 +169,47 @@ f = [1, 2]`,
 		args:     []string{"-f=1,2"},
 		expected: &sliceCase{S: Strings{"a", "b"}, F: Ints{1, 2}},
 	},
+	{
+		config:    &simpleCase{},
+		args:      []string{"-f1=NaN"},
+		expectErr: true,
+	},
+	{
+		config:    &simpleCase{},
+		toml:      `f1 = "a"`,
+		expectErr: true,
+	},
+	{
+		config:    &simpleCase{},
+		toml:      `f1 = 1`,
+		args:      []string{"-f1=NaN"},
+		expectErr: true,
+	},
+	{
+		config:    &simpleCase{},
+		toml:      `f1 = "a"`,
+		args:      []string{"-f1=1"},
+		expectErr: true,
+	},
 }
 
 func TestGoodConfigs(t *testing.T) {
 	for _, test := range testCases {
 		if err := checkCase(test); err != nil {
+			t.Log(test)
 			t.Error(err)
 		}
+	}
+}
+
+func TestIsHelp(t *testing.T) {
+	if !IsHelp(flag.ErrHelp) {
+		t.Fatal("IsHelp(flag.ErrHelp) != true")
+	}
+	if !IsHelp(FlagError{Err: flag.ErrHelp}) {
+		t.Fatal("IsHelp(FlagError{Err: flag.ErrHelp}) != true")
+	}
+	if IsHelp(errors.New("not help")) {
+		t.Fatal("IsHelp(not help) == true")
 	}
 }
