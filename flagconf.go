@@ -182,8 +182,8 @@ In TOML, a struct corresponds to a nested section; in flags the name will be dot
     // and this flag
     -s.n=3
 
-Embedded structs are handled similarly to encoding/json: fields of embedded
-struct are treated as if they were fields of embedding struct.
+Embedded structs are handled like in encoding/json: their exported fields are
+treated as if they were fields of the outer struct.
 
 Naming
 
