@@ -182,6 +182,9 @@ In TOML, a struct corresponds to a nested section; in flags the name will be dot
     // and this flag
     -s.n=3
 
+Embedded structs are handled like in encoding/json: their exported fields are
+treated as if they were fields of the outer struct.
+
 Naming
 
 Matching names from TOML values to struct field names is much like encoding/json:
@@ -237,6 +240,10 @@ func registerFlags(flagset *flag.FlagSet, v reflect.Value, namespace, descriptio
 			}
 			desc := typ.Tag.Get("desc")
 			newNS := joinNS(namespace, name)
+			// For embedded fields don't create an extra nested namespace.
+			if v.Type().Field(i).Anonymous {
+				newNS = namespace
+			}
 			// Create uninitialized pointers to structs
 			if field.Kind() == reflect.Ptr && field.Type().Elem().Kind() == reflect.Struct {
 				if field.IsNil() && field.IsValid() && field.CanSet() {

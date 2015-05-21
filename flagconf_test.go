@@ -59,11 +59,11 @@ type flagTagCase struct {
 	F1 int `flag:"f2"`
 }
 
-type embeddedCase struct {
+type nestedCase struct {
 	S1 *simpleCase
 }
 
-type nonPointerEmbeddedCase struct {
+type nonPointerNestedCase struct {
 	S1 simpleCase
 }
 
@@ -75,6 +75,18 @@ type ignoreCase struct {
 type sliceCase struct {
 	S Strings
 	F Ints
+}
+
+type embeddedCase struct {
+	EmbeddedInner
+}
+
+type embeddedCasePtr struct {
+	*EmbeddedInner
+}
+
+type EmbeddedInner struct {
+	F int
 }
 
 var testCases = []*testCase{
@@ -103,46 +115,46 @@ var testCases = []*testCase{
 		expected: &flagTagCase{F1: 4},
 	},
 	{
-		config: &embeddedCase{},
+		config: &nestedCase{},
 		toml: `[s1]
 f1 = 3`,
 		args:     nil,
-		expected: &embeddedCase{&simpleCase{F1: 3}},
+		expected: &nestedCase{&simpleCase{F1: 3}},
 	},
 	{
-		config: &embeddedCase{&simpleCase{}},
+		config: &nestedCase{&simpleCase{}},
 		toml: `[s1]
 f1 = 3`,
 		args:     nil,
-		expected: &embeddedCase{&simpleCase{F1: 3}},
+		expected: &nestedCase{&simpleCase{F1: 3}},
 	},
 	{
-		config: &embeddedCase{&simpleCase{}},
+		config: &nestedCase{&simpleCase{}},
 		toml: `[s1]
 f1 = 3`,
 		args:     []string{"-s1.f1=4"},
-		expected: &embeddedCase{&simpleCase{F1: 4}},
+		expected: &nestedCase{&simpleCase{F1: 4}},
 	},
 	{
-		config: &nonPointerEmbeddedCase{},
+		config: &nonPointerNestedCase{},
 		toml: `[s1]
 f1 = 3`,
 		args:     nil,
-		expected: &nonPointerEmbeddedCase{simpleCase{F1: 3}},
+		expected: &nonPointerNestedCase{simpleCase{F1: 3}},
 	},
 	{
-		config: &nonPointerEmbeddedCase{simpleCase{}},
+		config: &nonPointerNestedCase{simpleCase{}},
 		toml: `[s1]
 f1 = 3`,
 		args:     nil,
-		expected: &nonPointerEmbeddedCase{simpleCase{F1: 3}},
+		expected: &nonPointerNestedCase{simpleCase{F1: 3}},
 	},
 	{
-		config: &nonPointerEmbeddedCase{simpleCase{}},
+		config: &nonPointerNestedCase{simpleCase{}},
 		toml: `[s1]
 f1 = 3`,
 		args:     []string{"-s1.f1=4"},
-		expected: &nonPointerEmbeddedCase{simpleCase{F1: 4}},
+		expected: &nonPointerNestedCase{simpleCase{F1: 4}},
 	},
 	{
 		config:   &ignoreCase{},
@@ -190,6 +202,30 @@ f = [1, 2]`,
 		toml:      `f1 = "a"`,
 		args:      []string{"-f1=1"},
 		expectErr: true,
+	},
+	{
+		config:   &embeddedCase{},
+		toml:     "f = 3",
+		args:     nil,
+		expected: &embeddedCase{EmbeddedInner{F: 3}},
+	},
+	{
+		config:   &embeddedCase{},
+		toml:     "",
+		args:     []string{"-f=3"},
+		expected: &embeddedCase{EmbeddedInner{F: 3}},
+	},
+	{
+		config:   &embeddedCasePtr{},
+		toml:     "f = 3",
+		args:     nil,
+		expected: &embeddedCasePtr{&EmbeddedInner{F: 3}},
+	},
+	{
+		config:   &embeddedCasePtr{},
+		toml:     "",
+		args:     []string{"-f=3"},
+		expected: &embeddedCasePtr{&EmbeddedInner{F: 3}},
 	},
 }
 
